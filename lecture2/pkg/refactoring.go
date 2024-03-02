@@ -45,20 +45,18 @@ func Statement(invoice Invoice, plays Plays) (string, error) {
 	totalVolumeCredits := 0
 	result := fmt.Sprintf("Statement for %s\n", invoice.customer)
 
+	if err := validate(invoice, plays); err != nil {
+		return "", err
+	}
+
 	for _, perf := range invoice.performances {
-		if plays.HasNoPlay(perf) {
-			return "", errors.New("play not found")
-		}
-
-		perfAmount, err := amountFor(plays.PlayFor(perf), perf)
-		if err != nil {
-			return "", err
-		}
-		totalAmount += perfAmount
-
+		totalAmount += amountFor(plays.PlayFor(perf), perf)
 		totalVolumeCredits += volumeCreditsFor(perf, plays)
 
-		result += fmt.Sprintf(" %s: %.2f (%d seats)\n", plays.PlayFor(perf).name, float64(perfAmount)/100, perf.audience)
+		result += fmt.Sprintf(" %s: %.2f (%d seats)\n",
+			plays.PlayFor(perf).name,
+			float64(amountFor(plays.PlayFor(perf), perf))/100,
+			perf.audience)
 	}
 
 	result += fmt.Sprintf("Amount owed is %.2f\n", float64(totalAmount)/100)
@@ -77,7 +75,7 @@ func volumeCreditsFor(perf Performance, plays Plays) int {
 	return result
 }
 
-func amountFor(play Play, perf Performance) (int, error) {
+func amountFor(play Play, perf Performance) int {
 	result := 0
 
 	switch play._type {
@@ -93,8 +91,27 @@ func amountFor(play Play, perf Performance) (int, error) {
 		}
 		result += 300 * perf.audience
 	default:
-		return 0, errors.New(fmt.Sprintf("unknown type: %s", play._type))
+		panic(fmt.Sprintf("unknown type: %s", play._type))
 	}
 
-	return result, nil
+	return result
+}
+
+func validate(invoice Invoice, plays Plays) error {
+	for _, perf := range invoice.performances {
+		if plays.HasNoPlay(perf) {
+			return errors.New(fmt.Sprintf("play not found: %s", perf.playID))
+		}
+	}
+
+	for _, play := range plays {
+		switch play._type {
+		case "tragedy", "comedy":
+			break
+		default:
+			return errors.New(fmt.Sprintf("unknown type: %s", play._type))
+		}
+	}
+
+	return nil
 }
