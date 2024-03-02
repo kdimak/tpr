@@ -42,7 +42,6 @@ type Invoice struct {
 
 func Statement(invoice Invoice, plays Plays) (string, error) {
 	totalAmount := 0
-	totalVolumeCredits := 0
 	result := fmt.Sprintf("Statement for %s\n", invoice.customer)
 
 	if err := validate(invoice, plays); err != nil {
@@ -51,8 +50,6 @@ func Statement(invoice Invoice, plays Plays) (string, error) {
 
 	for _, perf := range invoice.performances {
 		totalAmount += amountFor(plays.PlayFor(perf), perf)
-		totalVolumeCredits += volumeCreditsFor(perf, plays)
-
 		result += fmt.Sprintf(" %s: %.2f (%d seats)\n",
 			plays.PlayFor(perf).name,
 			float64(amountFor(plays.PlayFor(perf), perf))/100,
@@ -60,9 +57,19 @@ func Statement(invoice Invoice, plays Plays) (string, error) {
 	}
 
 	result += fmt.Sprintf("Amount owed is %.2f\n", float64(totalAmount)/100)
-	result += fmt.Sprintf("You earned %d credits\n", totalVolumeCredits)
+	result += fmt.Sprintf("You earned %d credits\n", totalVolumeCredits(invoice, plays))
 
 	return result, nil
+}
+
+func totalVolumeCredits(invoice Invoice, plays Plays) int {
+	result := 0
+
+	for _, perf := range invoice.performances {
+		result += volumeCreditsFor(perf, plays)
+	}
+
+	return result
 }
 
 func volumeCreditsFor(perf Performance, plays Plays) int {
