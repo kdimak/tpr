@@ -42,7 +42,7 @@ type Invoice struct {
 
 func Statement(invoice Invoice, plays Plays) (string, error) {
 	totalAmount := 0
-	volumeCredits := 0
+	totalVolumeCredits := 0
 	result := fmt.Sprintf("Statement for %s\n", invoice.customer)
 
 	for _, perf := range invoice.performances {
@@ -50,25 +50,31 @@ func Statement(invoice Invoice, plays Plays) (string, error) {
 			return "", errors.New("play not found")
 		}
 
-		thisAmount, err := amountFor(plays.PlayFor(perf), perf)
+		perfAmount, err := amountFor(plays.PlayFor(perf), perf)
 		if err != nil {
 			return "", err
 		}
+		totalAmount += perfAmount
 
-		volumeCredits += int(math.Max(float64(perf.audience-30), 0))
+		totalVolumeCredits += volumeCreditsFor(perf, plays)
 
-		if "comedy" == plays.PlayFor(perf)._type {
-			volumeCredits += int(math.Floor(float64(perf.audience) / 5))
-		}
-
-		result += fmt.Sprintf(" %s: %.2f (%d seats)\n", plays.PlayFor(perf).name, float64(thisAmount)/100, perf.audience)
-		totalAmount += thisAmount
+		result += fmt.Sprintf(" %s: %.2f (%d seats)\n", plays.PlayFor(perf).name, float64(perfAmount)/100, perf.audience)
 	}
 
 	result += fmt.Sprintf("Amount owed is %.2f\n", float64(totalAmount)/100)
-	result += fmt.Sprintf("You earned %d credits\n", volumeCredits)
+	result += fmt.Sprintf("You earned %d credits\n", totalVolumeCredits)
 
 	return result, nil
+}
+
+func volumeCreditsFor(perf Performance, plays Plays) int {
+	result := int(math.Max(float64(perf.audience-30), 0))
+
+	if "comedy" == plays.PlayFor(perf)._type {
+		result += int(math.Floor(float64(perf.audience) / 5))
+	}
+
+	return result
 }
 
 func amountFor(play Play, perf Performance) (int, error) {
