@@ -40,24 +40,44 @@ type Invoice struct {
 // - Interface Segregation Principle: The function Statement does not have any interfaces.
 // - Dependency Inversion Principle: The function Statement does not depend on any concrete implementations.
 
-func Statement(invoice Invoice, plays Plays) (string, error) {
-	totalAmount := 0
-	result := fmt.Sprintf("Statement for %s\n", invoice.customer)
+type StatementData struct {
+	PerformanceAmount  map[Performance]int
+	TotalAmount        int
+	TotalVolumeCredits int
+}
 
+func NewStatementData(invoice Invoice, plays Plays) *StatementData {
+	totalAmount := 0
+	performanceAmount := make(map[Performance]int)
+
+	for _, perf := range invoice.performances {
+		performanceAmount[perf] = amountFor(plays.PlayFor(perf), perf)
+		totalAmount += performanceAmount[perf]
+	}
+
+	return &StatementData{
+		PerformanceAmount:  performanceAmount,
+		TotalAmount:        totalAmount,
+		TotalVolumeCredits: totalVolumeCredits(invoice, plays),
+	}
+}
+
+func Statement(invoice Invoice, plays Plays) (string, error) {
 	if err := validate(invoice, plays); err != nil {
 		return "", err
 	}
 
-	for _, perf := range invoice.performances {
-		totalAmount += amountFor(plays.PlayFor(perf), perf)
+	result := fmt.Sprintf("Statement for %s\n", invoice.customer)
+	statementData := NewStatementData(invoice, plays)
+	for perf, amount := range statementData.PerformanceAmount {
 		result += fmt.Sprintf(" %s: %.2f (%d seats)\n",
 			plays.PlayFor(perf).name,
-			float64(amountFor(plays.PlayFor(perf), perf))/100,
+			float64(amount)/100,
 			perf.audience)
 	}
 
-	result += fmt.Sprintf("Amount owed is %.2f\n", float64(totalAmount)/100)
-	result += fmt.Sprintf("You earned %d credits\n", totalVolumeCredits(invoice, plays))
+	result += fmt.Sprintf("Amount owed is %.2f\n", float64(statementData.TotalAmount)/100)
+	result += fmt.Sprintf("You earned %d credits\n", statementData.TotalVolumeCredits)
 
 	return result, nil
 }
