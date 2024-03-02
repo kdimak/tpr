@@ -16,6 +16,18 @@ type Play struct {
 	_type string
 }
 
+type Plays map[string]Play
+
+func (p Plays) PlayFor(perf Performance) Play {
+	return p[perf.playID]
+}
+
+func (p Plays) HasNoPlay(perf Performance) bool {
+	_, ok := p[perf.playID]
+
+	return !ok
+}
+
 type Invoice struct {
 	customer     string
 	performances []Performance
@@ -28,47 +40,55 @@ type Invoice struct {
 // - Interface Segregation Principle: The function Statement does not have any interfaces.
 // - Dependency Inversion Principle: The function Statement does not depend on any concrete implementations.
 
-func Statement(invoice Invoice, plays map[string]Play) (string, error) {
+func Statement(invoice Invoice, plays Plays) (string, error) {
 	totalAmount := 0
 	volumeCredits := 0
 	result := fmt.Sprintf("Statement for %s\n", invoice.customer)
 
 	for _, perf := range invoice.performances {
-		play, ok := plays[perf.playID]
-		if !ok {
+		if plays.HasNoPlay(perf) {
 			return "", errors.New("play not found")
 		}
 
-		thisAmount := 0
-
-		switch play._type {
-		case "tragedy":
-			thisAmount = 40000
-			if perf.audience > 30 {
-				thisAmount += 1000 * (perf.audience - 30)
-			}
-		case "comedy":
-			thisAmount = 30000
-			if perf.audience > 20 {
-				thisAmount += 10000 + 500*(perf.audience-20)
-			}
-			thisAmount += 300 * perf.audience
-		default:
-			return "", errors.New(fmt.Sprintf("unknown type: %s", play._type))
+		thisAmount, err := amountFor(plays.PlayFor(perf), perf)
+		if err != nil {
+			return "", err
 		}
 
 		volumeCredits += int(math.Max(float64(perf.audience-30), 0))
 
-		if "comedy" == play._type {
+		if "comedy" == plays.PlayFor(perf)._type {
 			volumeCredits += int(math.Floor(float64(perf.audience) / 5))
 		}
 
-		result += fmt.Sprintf(" %s: %.2f (%d seats)\n", play.name, float64(thisAmount)/100, perf.audience)
+		result += fmt.Sprintf(" %s: %.2f (%d seats)\n", plays.PlayFor(perf).name, float64(thisAmount)/100, perf.audience)
 		totalAmount += thisAmount
 	}
 
 	result += fmt.Sprintf("Amount owed is %.2f\n", float64(totalAmount)/100)
 	result += fmt.Sprintf("You earned %d credits\n", volumeCredits)
+
+	return result, nil
+}
+
+func amountFor(play Play, perf Performance) (int, error) {
+	result := 0
+
+	switch play._type {
+	case "tragedy":
+		result = 40000
+		if perf.audience > 30 {
+			result += 1000 * (perf.audience - 30)
+		}
+	case "comedy":
+		result = 30000
+		if perf.audience > 20 {
+			result += 10000 + 500*(perf.audience-20)
+		}
+		result += 300 * perf.audience
+	default:
+		return 0, errors.New(fmt.Sprintf("unknown type: %s", play._type))
+	}
 
 	return result, nil
 }
