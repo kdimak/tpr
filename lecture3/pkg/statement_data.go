@@ -3,7 +3,6 @@ package pkg
 import (
 	"errors"
 	"fmt"
-	"math"
 )
 
 // SOLID principles:
@@ -19,46 +18,35 @@ type statementData struct {
 	totalVolumeCredits  int
 }
 
-func newStatementData(invoice Invoice, plays Plays) (*statementData, error) {
+func (sd *statementData) AddPerformance(perf Performance, amount int) {
+	sd.amountByPerformance[perf] = amount
+	sd.totalAmount += amount
+}
+
+func newStatementData() *statementData {
+	return &statementData{
+		amountByPerformance: make(map[Performance]int),
+	}
+}
+
+func buildStatementData(invoice Invoice, plays Plays) (*statementData, error) {
 	if err := validate(invoice, plays); err != nil {
 		return nil, fmt.Errorf("create statement data: %w", err)
 	}
 
-	totalAmount := 0
-	performanceAmount := make(map[Performance]int)
+	sd := newStatementData()
 
 	for _, perf := range invoice.performances {
-		performanceAmount[perf] = amountFor(plays.PlayFor(perf), perf)
-		totalAmount += performanceAmount[perf]
+		sd.AddPerformance(perf, amountFor(plays.PlayFor(perf), perf))
 	}
 
-	return &statementData{
-		amountByPerformance: performanceAmount,
-		totalAmount:         totalAmount,
-		totalVolumeCredits:  totalVolumeCredits(invoice, plays),
-	}, nil
+	sd.totalVolumeCredits = totalVolumeCredits(invoice, plays)
+
+	return sd, nil
 }
 
 func amountFor(play Play, perf Performance) int {
-	result := 0
-
-	switch play._type {
-	case "tragedy":
-		result = 40000
-		if perf.audience > 30 {
-			result += 1000 * (perf.audience - 30)
-		}
-	case "comedy":
-		result = 30000
-		if perf.audience > 20 {
-			result += 10000 + 500*(perf.audience-20)
-		}
-		result += 300 * perf.audience
-	default:
-		panic(fmt.Sprintf("unknown type: %s", play._type))
-	}
-
-	return result
+	return CreatePlayType(play).AmountFor(perf)
 }
 
 func totalVolumeCredits(invoice Invoice, plays Plays) int {
@@ -72,13 +60,7 @@ func totalVolumeCredits(invoice Invoice, plays Plays) int {
 }
 
 func volumeCreditsFor(perf Performance, plays Plays) int {
-	result := int(math.Max(float64(perf.audience-30), 0))
-
-	if "comedy" == plays.PlayFor(perf)._type {
-		result += int(math.Floor(float64(perf.audience) / 5))
-	}
-
-	return result
+	return CreatePlayType(plays.PlayFor(perf)).VolumeCreditsFor(perf)
 }
 
 func validate(invoice Invoice, plays Plays) error {

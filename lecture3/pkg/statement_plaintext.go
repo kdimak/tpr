@@ -35,7 +35,7 @@ type StringReport string
 
 // PlainTextStatementReport returns a plain text report for the given invoice and plays.
 func PlainTextStatementReport(invoice Invoice, plays Plays) (StringReport, error) {
-	sd, err := newStatementData(invoice, plays)
+	sd, err := buildStatementData(invoice, plays)
 	if err != nil {
 		return "", fmt.Errorf("create statement: %w", err)
 	}
