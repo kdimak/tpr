@@ -69,3 +69,29 @@ You earned 47 credits
 		assert.NotEqual(t, "", got, "PlainTextStatementReport() = %q, want %q", got, "")
 	})
 }
+
+// IDEA for new API. This is a draft. It is not implemented yet.
+/*
+func TestStatement(t *testing.T) {
+	invoice := Invoice{
+		customer: "BigCo",
+		performances: []Performance{
+			{playID: "hamlet", audience: 55},
+			{playID: "as-like", audience: 35},
+			{playID: "othello", audience: 40},
+		},
+	}
+
+	plays := map[string]Play{
+		"hamlet":  {"Hamlet", "tragedy"},
+		"as-like": {"As You Like It", "comedy"},
+		"othello": {"Othello", "tragedy"},
+	}
+
+	statement, err := CreateStatement(invoice, plays)
+	require.NoError(t, err)
+
+	statement.PlainTextReport()
+	statement.HTMLReport()
+}
+*/
