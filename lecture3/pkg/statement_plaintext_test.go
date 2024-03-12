@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestStatement(t *testing.T) {
+func TestPlainTextStatementReport(t *testing.T) {
 	t.Run("Happy path", func(t *testing.T) {
 		invoice := Invoice{
 			customer: "BigCo",
@@ -23,9 +23,7 @@ func TestStatement(t *testing.T) {
 		}
 
 		got, err := PlainTextStatementReport(invoice, plays)
-		if err != nil {
-			t.Errorf("PlainTextStatementReport() returned an error: %v", err)
-		}
+		assert.NoError(t, err)
 
 		want := StringReport(`PlainTextStatementReport for BigCo
  Hamlet: 650.00 (55 seats)
@@ -34,12 +32,7 @@ func TestStatement(t *testing.T) {
 Amount owed is 1730.00
 You earned 47 credits
 `)
-
 		assert.Equal(t, want, got)
-
-		if got != want {
-			t.Errorf("PlainTextStatementReport() = %q, want %q", got, want)
-		}
 	})
 
 	t.Run("Error: Play not found", func(t *testing.T) {
@@ -55,13 +48,8 @@ You earned 47 credits
 		}
 
 		got, err := PlainTextStatementReport(invoice, plays)
-		if err == nil {
-			t.Errorf("PlainTextStatementReport() did not return an error: %v", err)
-		}
-
-		if got != "" {
-			t.Errorf("PlainTextStatementReport() = %q, want %q", got, "")
-		}
+		assert.Error(t, err, "PlainTextStatementReport() did not return an error: %v", err)
+		assert.NotEqual(t, "", got, "PlainTextStatementReport() = %q, want %q", got, "")
 	})
 
 	t.Run("Error: Unknown play type", func(t *testing.T) {
@@ -77,12 +65,7 @@ You earned 47 credits
 		}
 
 		got, err := PlainTextStatementReport(invoice, plays)
-		if err == nil {
-			t.Errorf("PlainTextStatementReport() did not return an error: %v", err)
-		}
-
-		if got != "" {
-			t.Errorf("PlainTextStatementReport() = %q, want %q", got, "")
-		}
+		assert.Error(t, err, "PlainTextStatementReport() did not return an error: %v", err)
+		assert.NotEqual(t, "", got, "PlainTextStatementReport() = %q, want %q", got, "")
 	})
 }
