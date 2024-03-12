@@ -7,11 +7,11 @@ import (
 )
 
 // SOLID principles:
-// - Single Responsibility Principle: The function Statement has only one reason to change, which is to calculate the statement for a given invoice.
-// - Open/Closed Principle: The function Statement is open for extension and closed for modification. The function can be extended by adding new play types without modifying the existing code.
-// - Liskov Substitution Principle: The function Statement does not have any subclasses.
-// - Interface Segregation Principle: The function Statement does not have any interfaces.
-// - Dependency Inversion Principle: The function Statement does not depend on any concrete implementations.
+// - Single Responsibility Principle: The function PlainTextStatementReport has only one reason to change, which is to calculate the statement for a given invoice.
+// - Open/Closed Principle: The function PlainTextStatementReport is open for extension and closed for modification. The function can be extended by adding new play types without modifying the existing code.
+// - Liskov Substitution Principle: The function PlainTextStatementReport does not have any subclasses.
+// - Interface Segregation Principle: The function PlainTextStatementReport does not have any interfaces.
+// - Dependency Inversion Principle: The function PlainTextStatementReport does not depend on any concrete implementations.
 
 type statementData struct {
 	amountByPerformance map[Performance]int

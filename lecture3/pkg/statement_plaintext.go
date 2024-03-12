@@ -31,7 +31,10 @@ type Invoice struct {
 	performances []Performance
 }
 
-func Statement(invoice Invoice, plays Plays) (string, error) {
+type StringReport string
+
+// PlainTextStatementReport returns a plain text report for the given invoice and plays.
+func PlainTextStatementReport(invoice Invoice, plays Plays) (StringReport, error) {
 	sd, err := newStatementData(invoice, plays)
 	if err != nil {
 		return "", fmt.Errorf("create statement: %w", err)
@@ -40,8 +43,8 @@ func Statement(invoice Invoice, plays Plays) (string, error) {
 	return createStringReport(invoice, plays, sd), nil
 }
 
-func createStringReport(invoice Invoice, plays Plays, sd *statementData) string {
-	result := fmt.Sprintf("Statement for %s\n", invoice.customer)
+func createStringReport(invoice Invoice, plays Plays, sd *statementData) StringReport {
+	result := fmt.Sprintf("PlainTextStatementReport for %s\n", invoice.customer)
 
 	for perf, amount := range sd.amountByPerformance {
 		result += fmt.Sprintf(" %s: %.2f (%d seats)\n",
@@ -53,5 +56,5 @@ func createStringReport(invoice Invoice, plays Plays, sd *statementData) string 
 	result += fmt.Sprintf("Amount owed is %.2f\n", float64(sd.totalAmount)/100)
 	result += fmt.Sprintf("You earned %d credits\n", sd.totalVolumeCredits)
 
-	return result
+	return StringReport(result)
 }

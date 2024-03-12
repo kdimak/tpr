@@ -22,23 +22,23 @@ func TestStatement(t *testing.T) {
 			"othello": {"Othello", "tragedy"},
 		}
 
-		got, err := Statement(invoice, plays)
+		got, err := PlainTextStatementReport(invoice, plays)
 		if err != nil {
-			t.Errorf("Statement() returned an error: %v", err)
+			t.Errorf("PlainTextStatementReport() returned an error: %v", err)
 		}
 
-		want := `Statement for BigCo
+		want := StringReport(`PlainTextStatementReport for BigCo
  Hamlet: 650.00 (55 seats)
  As You Like It: 580.00 (35 seats)
  Othello: 500.00 (40 seats)
 Amount owed is 1730.00
 You earned 47 credits
-`
+`)
 
 		assert.Equal(t, want, got)
 
 		if got != want {
-			t.Errorf("Statement() = %q, want %q", got, want)
+			t.Errorf("PlainTextStatementReport() = %q, want %q", got, want)
 		}
 	})
 
@@ -54,13 +54,13 @@ You earned 47 credits
 			"othello": {"Othello", "tragedy"},
 		}
 
-		got, err := Statement(invoice, plays)
+		got, err := PlainTextStatementReport(invoice, plays)
 		if err == nil {
-			t.Errorf("Statement() did not return an error: %v", err)
+			t.Errorf("PlainTextStatementReport() did not return an error: %v", err)
 		}
 
 		if got != "" {
-			t.Errorf("Statement() = %q, want %q", got, "")
+			t.Errorf("PlainTextStatementReport() = %q, want %q", got, "")
 		}
 	})
 
@@ -76,13 +76,13 @@ You earned 47 credits
 			"hamlet": {"Hamlet", "science-fiction"},
 		}
 
-		got, err := Statement(invoice, plays)
+		got, err := PlainTextStatementReport(invoice, plays)
 		if err == nil {
-			t.Errorf("Statement() did not return an error: %v", err)
+			t.Errorf("PlainTextStatementReport() did not return an error: %v", err)
 		}
 
 		if got != "" {
-			t.Errorf("Statement() = %q, want %q", got, "")
+			t.Errorf("PlainTextStatementReport() = %q, want %q", got, "")
 		}
 	})
 }
